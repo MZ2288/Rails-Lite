@@ -11,7 +11,7 @@ class ControllerBase
   def initialize(req, res, route_params = {})
     @req = req
     @res = res
-    @params = {}
+    @params = req.params.merge(route_params)
     @already_built_response = false
   end
 
@@ -22,11 +22,12 @@ class ControllerBase
 
   # Set the response status code and header
   def redirect_to(url)
+    fail if already_built_response?
     @res.status = 302
     @res['Location'] = url
-    fail if already_built_response?
     @already_built_response = true
-    @session.store_session(@res)
+    session.store_session(@res)
+    flash.store_flash(@res)
   end
 
   # Populate the response with content.
@@ -37,7 +38,8 @@ class ControllerBase
     @res['Content-type'] = content_type
     @res.write(content)
     @already_built_response = true
-    @session.store_session(@res)
+    session.store_session(@res)
+    flash.store_flash(@res)
   end
 
   # use ERB and binding to evaluate templates
@@ -52,6 +54,10 @@ class ControllerBase
   # method exposing a `Session` object
   def session
     @session ||= Session.new(@req)
+  end
+
+  def flash
+    @flash ||= Flash.new(@req)
   end
 
   # use this with the router to call action_name (:index, :show, :create...)

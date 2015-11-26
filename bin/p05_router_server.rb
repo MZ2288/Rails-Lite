@@ -40,10 +40,11 @@ app = Proc.new do |env|
   req = Rack::Request.new(env)
   res = Rack::Response.new
   router.run(req, res)
+  p res
   res.finish
 end
 
 Rack::Server.start(
- app: app, 
+ app: app,
  Port: 3000
 )
